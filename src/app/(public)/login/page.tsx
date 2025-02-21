@@ -9,7 +9,7 @@ export default function Login() {
           <p className="text-lg font-semibold">
           "O sucesso não é o final, o fracasso não é fatal: é a coragem de continuar que conta."
           </p>
-          <p className="mt-4 font-bold">Winston Churchill</p>
+          <p className="mt-4 font-bold">by: Winston Churchill</p>
         </div>
       </div>
       
