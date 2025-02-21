@@ -33,7 +33,7 @@ export default function Configuracoes() {
         </CardHeader>
         <CardContent className="flex justify-between items-center">
           <span className="text-muted-foreground text-md">Ativar remoção automática?</span>
-          <Switch checked={remocaoAutomatica} onCheckedChange={setRemocaoAutomatica} />
+          <Button variant={"outline"} disabled>Em Breve !</Button>
         </CardContent>
       </Card>
 

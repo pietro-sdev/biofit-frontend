@@ -202,7 +202,7 @@ export default function ListaRemocao() {
       </Card>
 
       <div className="mt-4 flex justify-end">
-        <Button variant="destructive" onClick={handleRemoverAprovados}>
+        <Button variant="destructive" disabled onClick={handleRemoverAprovados}>
           Remover Aprovados Agora
         </Button>
       </div>
