@@ -5,10 +5,19 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export function CreateAdminDialog() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
+  const [cargo, setCargo] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -22,7 +31,7 @@ export function CreateAdminDialog() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, password, cargo }),
       });
       if (!res.ok) {
         toast({ title: "Falha ao cadastrar administrador" });
@@ -31,6 +40,7 @@ export function CreateAdminDialog() {
       toast({ title: "Administrador cadastrado com sucesso" });
       // Limpa os campos e fecha o modal
       setName("");
+      setCargo("");
       setEmail("");
       setPassword("");
       setOpen(false);
@@ -56,9 +66,9 @@ export function CreateAdminDialog() {
           </Dialog.Description>
           <form onSubmit={handleSubmit} className="mt-4 space-y-4">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium">
+              <Label htmlFor="name" className="block text-sm font-medium">
                 Nome
-              </label>
+              </Label>
               <Input
                 id="name"
                 type="text"
@@ -69,9 +79,25 @@ export function CreateAdminDialog() {
               />
             </div>
             <div>
-              <label htmlFor="email" className="block text-sm font-medium">
+              <Label htmlFor="cargo" className="block text-sm font-medium">
+                Cargo
+              </Label>
+              <Select value={cargo} onValueChange={(value) => setCargo(value)}>
+                <SelectTrigger id="cargo">
+                  <SelectValue placeholder="Selecione o cargo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Administrador">
+                    Administrador
+                  </SelectItem>
+                  <SelectItem value="Atendente">Atendente</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="email" className="block text-sm font-medium">
                 Email
-              </label>
+              </Label>
               <Input
                 id="email"
                 type="email"
@@ -82,9 +108,9 @@ export function CreateAdminDialog() {
               />
             </div>
             <div>
-              <label htmlFor="password" className="block text-sm font-medium">
+              <Label htmlFor="password" className="block text-sm font-medium">
                 Senha
-              </label>
+              </Label>
               <Input
                 id="password"
                 type="password"

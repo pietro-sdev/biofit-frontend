@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -22,36 +23,75 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { ConfirmDialog } from "@/components/layout/confirm-dialog";
 import { CreateAdminDialog } from "@/components/layout/admin-dialog";
+import { Badge } from "@/components/ui/badge";
+
+// Dados fictícios para administradores, com cargo "Administrador" ou "Atendente" e status ativo/inativo
+const dummyAdmins = [
+  {
+    id: "1",
+    name: "Alice",
+    email: "alice@example.com",
+    createdAt: "2023-01-01T12:00:00Z",
+    cargo: "Administrador",
+    active: true,
+  },
+  {
+    id: "2",
+    name: "Bob",
+    email: "bob@example.com",
+    createdAt: "2023-02-01T12:00:00Z",
+    cargo: "Atendente",
+    active: false,
+  },
+  {
+    id: "3",
+    name: "Carol",
+    email: "carol@example.com",
+    createdAt: "2023-03-01T12:00:00Z",
+    cargo: "Atendente",
+    active: true,
+  },
+  {
+    id: "4",
+    name: "Dave",
+    email: "dave@example.com",
+    createdAt: "2023-04-01T12:00:00Z",
+    cargo: "Atendente",
+    active: true,
+  },
+  {
+    id: "5",
+    name: "Eve",
+    email: "eve@example.com",
+    createdAt: "2023-05-01T12:00:00Z",
+    cargo: "Atendente",
+    active: false,
+  },
+  {
+    id: "6",
+    name: "Frank",
+    email: "frank@example.com",
+    createdAt: "2023-06-01T12:00:00Z",
+    cargo: "Atendente",
+    active: true,
+  },
+  {
+    id: "7",
+    name: "Grace",
+    email: "grace@example.com",
+    createdAt: "2023-07-01T12:00:00Z",
+    cargo: "Atendente",
+    active: true,
+  },
+];
 
 export default function AdministradoresPage() {
-  const [admins, setAdmins] = useState<any[]>([]);
+  const [admins, setAdmins] = useState<any[]>(dummyAdmins);
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
   const [adminToRemove, setAdminToRemove] = useState<any>(null);
-
-  async function fetchAdmins() {
-    try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-      if (!baseUrl) return;
-      const res = await fetch(`${baseUrl}/admins-list`);
-      if (!res.ok) {
-        const errorData = await res.json();
-        console.error("Erro ao buscar administradores:", errorData);
-        toast({ title: "Falha ao buscar administradores" });
-        return;
-      }
-      const data = await res.json();
-      setAdmins(data);
-    } catch (error) {
-      console.error("Erro fetchAdmins:", error);
-      toast({ title: "Erro ao buscar administradores" });
-    }
-  }
-
-  useEffect(() => {
-    fetchAdmins();
-  }, []);
+  const router = useRouter();
 
   function formatDate(dateString: string): string {
     const date = new Date(dateString);
@@ -70,28 +110,14 @@ export default function AdministradoresPage() {
   );
 
   async function handleDeleteAdmin(adminId: string) {
-    try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-      if (!baseUrl) return;
-      const res = await fetch(`${baseUrl}/admins/${adminId}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) {
-        toast({ title: "Falha ao deletar administrador", variant:"destructive" });
-        return;
-      }
-      toast({ title: "Administrador deletado com sucesso", variant:"success"});
-      fetchAdmins();
-    } catch (error) {
-      console.error("Erro ao deletar administrador:", error);
-      toast({ title: "Erro ao deletar administrador" });
-    }
+    setAdmins((prevAdmins) => prevAdmins.filter((admin) => admin.id !== adminId));
+    toast({ title: "Administrador deletado com sucesso", variant: "success" });
   }
 
   return (
     <div className="p-4 w-full">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold mb-4">Gerenciamento de Administradores</h1>
+        <h1 className="text-2xl font-bold mb-4">Gerenciamento de Usuários</h1>
         <CreateAdminDialog />
       </div>
       <Input
@@ -108,25 +134,48 @@ export default function AdministradoresPage() {
               <TableHead>Email</TableHead>
               <TableHead>Criado em</TableHead>
               <TableHead>Visualizar</TableHead>
+              <TableHead>Cargo</TableHead>
+              <TableHead>Status</TableHead>
               <TableHead>Excluir</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {paginatedAdmins.map((admin) => (
-              <TableRow key={admin.id}>
+              <TableRow
+                key={admin.id}
+                onClick={() => router.push(`/admin/${admin.id}`)}
+                className="cursor-pointer hover:bg-gray-50"
+              >
                 <TableCell>{admin.name}</TableCell>
                 <TableCell>{admin.email}</TableCell>
                 <TableCell>{formatDate(admin.createdAt)}</TableCell>
                 <TableCell>
-                  <Button variant="outline" size="sm" className="mr-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mr-2"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      router.push(`/admin/${admin.id}`);
+                    }}
+                  >
                     Visualizar
                   </Button>
+                </TableCell>
+                <TableCell>{admin.cargo}</TableCell>
+                <TableCell>
+                  <Badge variant={admin.active ? "secondary" : "destructive"}>
+                    {admin.active ? "Ativo" : "Inativo"}
+                  </Badge>
                 </TableCell>
                 <TableCell>
                   <Button
                     variant="destructive"
                     size="sm"
-                    onClick={() => setAdminToRemove(admin)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setAdminToRemove(admin);
+                    }}
                   >
                     Remover
                   </Button>
