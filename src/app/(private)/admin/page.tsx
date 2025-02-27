@@ -25,7 +25,6 @@ import { ConfirmDialog } from "@/components/layout/confirm-dialog";
 import { CreateAdminDialog } from "@/components/layout/admin-dialog";
 import { Badge } from "@/components/ui/badge";
 
-// Dados fictícios para administradores, com cargo "Administrador" ou "Atendente" e status ativo/inativo
 const dummyAdmins = [
   {
     id: "1",
@@ -121,7 +120,7 @@ export default function AdministradoresPage() {
         <CreateAdminDialog />
       </div>
       <Input
-        placeholder="Buscar por nome ou email..."
+        placeholder="Buscar por email..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         className="w-1/3 mb-4"
@@ -130,7 +129,6 @@ export default function AdministradoresPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Nome</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Criado em</TableHead>
               <TableHead>Visualizar</TableHead>
@@ -146,7 +144,6 @@ export default function AdministradoresPage() {
                 onClick={() => router.push(`/admin/${admin.id}`)}
                 className="cursor-pointer hover:bg-gray-50"
               >
-                <TableCell>{admin.name}</TableCell>
                 <TableCell>{admin.email}</TableCell>
                 <TableCell>{formatDate(admin.createdAt)}</TableCell>
                 <TableCell>

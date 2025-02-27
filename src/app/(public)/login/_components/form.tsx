@@ -2,28 +2,20 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Cookies from "js-cookie";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeClosedIcon } from "lucide-react";
-import { LoginRequest, LoginResponse } from "@/models/Auth";
-import { useToast } from "@/hooks/use-toast";
 
 export default function FormLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { toast } = useToast(); 
   const router = useRouter();
 
   const handleLogin = async () => {
     setLoading(true);
-    // Aqui você pode implementar a lógica de autenticação.
-    // Este exemplo simula um login com sucesso após 1 segundo.
     setTimeout(() => {
-      // Exemplo: Salvar um cookie ou token, se necessário.
-      // Cookies.set("token", "seu-token-aqui");
       router.push("/admin");
       setLoading(false);
     }, 1000);
@@ -62,7 +54,6 @@ export default function FormLogin() {
               {showPassword ? <Eye size={20} /> : <EyeClosedIcon size={20} />}
             </button>
           </div>
-          <p className="text-right text-sm cursor-pointer mt-1 font-semibold">Esqueceu sua senha?</p>
         </div>
 
         <Button className="w-full" onClick={handleLogin} disabled={loading}>
