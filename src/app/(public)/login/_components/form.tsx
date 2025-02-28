@@ -1,24 +1,67 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import Cookies from "js-cookie";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeClosedIcon } from "lucide-react";
+import { LoginRequest, LoginResponse } from "@/app/models/Auth";
+import { useToast } from "@/hooks/use-toast";
 
 export default function FormLogin() {
+  const [formData, setFormData] = useState<LoginRequest>({
+    email: "",
+    password: "",
+  });
+
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
+  const { toast } = useToast(); 
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
   const handleLogin = async () => {
     setLoading(true);
-    setTimeout(() => {
-      router.push("/admin");
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        throw new Error("Credenciais inválidas!");
+      }
+
+      const data: LoginResponse = await response.json();
+
+      Cookies.set("token", data.token, { expires: 7, secure: true });
+
+      toast({
+        title: "Login realizado!",
+        description: "Redirecionando para o painel...",
+        variant: "success",
+      });
+
+      setTimeout(() => {
+        window.location.href = "/admin";
+      }, 1000);
+    } catch (err) {
+      toast({
+        title: "Erro no login",
+        description: "E-mail ou senha incorretos!",
+        variant: "destructive",
+      });
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   return (
@@ -35,6 +78,8 @@ export default function FormLogin() {
             type="email"
             name="email"
             placeholder="Digite seu e-mail aqui..."
+            value={formData.email}
+            onChange={handleInputChange}
           />
         </div>
 
@@ -45,6 +90,8 @@ export default function FormLogin() {
               type={showPassword ? "text" : "password"}
               name="password"
               placeholder="Digite sua senha aqui..."
+              value={formData.password}
+              onChange={handleInputChange}
             />
             <button
               type="button"
