@@ -4,7 +4,6 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { toast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -13,6 +12,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { PlusCircleIcon } from "lucide-react";
+import Cookies from "js-cookie"; 
 
 export function CreateAdminDialog() {
   const [open, setOpen] = useState(false);
@@ -23,37 +24,51 @@ export function CreateAdminDialog() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-    if (!baseUrl) return;
+
+    const user = {
+      nome: name,
+      roles: cargo,
+      email: email,
+      senha: password,
+    };
+
     try {
-      const res = await fetch(`${baseUrl}/admins`, {
+      const token = Cookies.get("token");
+
+      if (!token) {
+        throw new Error("Token não encontrado.");
+      }
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/usuarios/cadastro`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
         },
-        body: JSON.stringify({ name, email, password, cargo }),
+        body: JSON.stringify(user),
       });
-      if (!res.ok) {
-        toast({ title: "Falha ao cadastrar administrador" });
-        return;
+
+      if (!response.ok) {
+        throw new Error("Erro ao cadastrar usuário");
       }
-      toast({ title: "Administrador cadastrado com sucesso" });
-      // Limpa os campos e fecha o modal
-      setName("");
-      setCargo("");
-      setEmail("");
-      setPassword("");
+
+      const data = await response.json();
+      alert(data.message);
       setOpen(false);
-    } catch (error) {
-      console.error("Erro ao cadastrar administrador:", error);
-      toast({ title: "Erro ao cadastrar administrador" });
+
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        alert("Erro ao cadastrar usuário: " + error.message);
+      } else {
+        alert("Erro desconhecido ao cadastrar usuário.");
+      }
     }
   }
 
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Trigger asChild>
-        <Button>Adicionar Administrador</Button>
+        <Button><PlusCircleIcon /> Adicionar Usuário</Button>
       </Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/50" />
@@ -87,10 +102,10 @@ export function CreateAdminDialog() {
                   <SelectValue placeholder="Selecione o cargo" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Administrador">
+                  <SelectItem value="ADMIN">
                     Administrador
                   </SelectItem>
-                  <SelectItem value="Atendente">Atendente</SelectItem>
+                  <SelectItem value="ESTOQUISTA">Estoquista</SelectItem>
                 </SelectContent>
               </Select>
             </div>

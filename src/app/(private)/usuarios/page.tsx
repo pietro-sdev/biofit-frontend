@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Table,
@@ -25,72 +25,34 @@ import { ConfirmDialog } from "@/components/layout/confirm-dialog";
 import { CreateAdminDialog } from "@/components/layout/admin-dialog";
 import { Badge } from "@/components/ui/badge";
 
-const dummyAdmins = [
-  {
-    id: "1",
-    name: "Alice",
-    email: "alice@example.com",
-    createdAt: "2023-01-01T12:00:00Z",
-    cargo: "Administrador",
-    active: true,
-  },
-  {
-    id: "2",
-    name: "Bob",
-    email: "bob@example.com",
-    createdAt: "2023-02-01T12:00:00Z",
-    cargo: "Atendente",
-    active: false,
-  },
-  {
-    id: "3",
-    name: "Carol",
-    email: "carol@example.com",
-    createdAt: "2023-03-01T12:00:00Z",
-    cargo: "Atendente",
-    active: true,
-  },
-  {
-    id: "4",
-    name: "Dave",
-    email: "dave@example.com",
-    createdAt: "2023-04-01T12:00:00Z",
-    cargo: "Atendente",
-    active: true,
-  },
-  {
-    id: "5",
-    name: "Eve",
-    email: "eve@example.com",
-    createdAt: "2023-05-01T12:00:00Z",
-    cargo: "Atendente",
-    active: false,
-  },
-  {
-    id: "6",
-    name: "Frank",
-    email: "frank@example.com",
-    createdAt: "2023-06-01T12:00:00Z",
-    cargo: "Atendente",
-    active: true,
-  },
-  {
-    id: "7",
-    name: "Grace",
-    email: "grace@example.com",
-    createdAt: "2023-07-01T12:00:00Z",
-    cargo: "Atendente",
-    active: true,
-  },
-];
-
 export default function AdministradoresPage() {
-  const [admins, setAdmins] = useState<any[]>(dummyAdmins);
+  const [admins, setAdmins] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
   const [adminToRemove, setAdminToRemove] = useState<any>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    const fetchAdmins = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/usuarios`);
+        if (!response.ok) {
+          throw new Error("Erro ao buscar administradores");
+        }
+        const data = await response.json();
+        setAdmins(data);
+      } catch (error) {
+        toast({
+          title: "Erro",
+          description: "Não foi possível carregar os administradores.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    fetchAdmins();
+  }, []);
 
   function formatDate(dateString: string): string {
     const date = new Date(dateString);
@@ -98,7 +60,6 @@ export default function AdministradoresPage() {
   }
 
   const filteredAdmins = admins.filter((admin) =>
-    admin.name.toLowerCase().includes(search.toLowerCase()) ||
     admin.email.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -108,10 +69,18 @@ export default function AdministradoresPage() {
     currentPage * itemsPerPage
   );
 
-  async function handleDeleteAdmin(adminId: string) {
-    setAdmins((prevAdmins) => prevAdmins.filter((admin) => admin.id !== adminId));
-    toast({ title: "Administrador deletado com sucesso", variant: "success" });
-  }
+  const formatRole = (role: string) => {
+    switch (role) {
+      case "CLIENTE":
+        return "Cliente";
+      case "ESTOQUISTA":
+        return "Estoquista";
+      case "ADMIN":
+        return "Administrador";
+      default:
+        return role;
+    }
+  };
 
   return (
     <div className="p-4 w-full">
@@ -130,22 +99,19 @@ export default function AdministradoresPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Email</TableHead>
-              <TableHead>Criado em</TableHead>
               <TableHead>Visualizar</TableHead>
               <TableHead>Cargo</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Excluir</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {paginatedAdmins.map((admin) => (
               <TableRow
                 key={admin.id}
-                onClick={() => router.push(`/admin/${admin.id}`)}
+                onClick={() => router.push(`/usuarios/${admin.id}`)} 
                 className="cursor-pointer hover:bg-gray-50"
               >
                 <TableCell>{admin.email}</TableCell>
-                <TableCell>{formatDate(admin.createdAt)}</TableCell>
                 <TableCell>
                   <Button
                     variant="outline"
@@ -153,29 +119,17 @@ export default function AdministradoresPage() {
                     className="mr-2"
                     onClick={(e) => {
                       e.stopPropagation();
-                      router.push(`/admin/${admin.id}`);
+                      router.push(`/usuarios/${admin.id}`); 
                     }}
                   >
                     Visualizar
                   </Button>
                 </TableCell>
-                <TableCell>{admin.cargo}</TableCell>
+                <TableCell>{formatRole(admin.roles)}</TableCell>
                 <TableCell>
-                  <Badge variant={admin.active ? "secondary" : "destructive"}>
-                    {admin.active ? "Ativo" : "Inativo"}
+                  <Badge variant={admin.ativo ? "secondary" : "destructive"}>
+                    {admin.ativo ? "Ativo" : "Inativo"}
                   </Badge>
-                </TableCell>
-                <TableCell>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setAdminToRemove(admin);
-                    }}
-                  >
-                    Remover
-                  </Button>
                 </TableCell>
               </TableRow>
             ))}
@@ -209,17 +163,6 @@ export default function AdministradoresPage() {
         </PaginationContent>
       </Pagination>
 
-      {adminToRemove && (
-        <ConfirmDialog
-          title="Confirmar Exclusão"
-          description={`Deseja realmente excluir o administrador ${adminToRemove.name}?`}
-          onConfirm={() => {
-            handleDeleteAdmin(adminToRemove.id);
-            setAdminToRemove(null);
-          }}
-          onCancel={() => setAdminToRemove(null)}
-        />
-      )}
     </div>
   );
 }

@@ -6,42 +6,45 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { User, Mail, Calendar, Briefcase } from "lucide-react";
-
-// Dados fictícios para administradores, com cargo "Administrador" ou "Atendente"
-const dummyAdmins = [
-  { id: "1", name: "Alice", email: "alice@example.com", createdAt: "2023-01-01T12:00:00Z", cargo: "Administrador" },
-  { id: "2", name: "Bob", email: "bob@example.com", createdAt: "2023-02-01T12:00:00Z", cargo: "Atendente" },
-  { id: "3", name: "Carol", email: "carol@example.com", createdAt: "2023-03-01T12:00:00Z", cargo: "Atendente" },
-  { id: "4", name: "Dave", email: "dave@example.com", createdAt: "2023-04-01T12:00:00Z", cargo: "Atendente" },
-  { id: "5", name: "Eve", email: "eve@example.com", createdAt: "2023-05-01T12:00:00Z", cargo: "Atendente" },
-  { id: "6", name: "Frank", email: "frank@example.com", createdAt: "2023-06-01T12:00:00Z", cargo: "Atendente" },
-  { id: "7", name: "Grace", email: "grace@example.com", createdAt: "2023-07-01T12:00:00Z", cargo: "Atendente" },
-];
+import { User, Mail, Briefcase } from "lucide-react";
+import Cookies from "js-cookie"; 
 
 export default function AdminDetailsPage() {
   const { id } = useParams();
   const router = useRouter();
   const [admin, setAdmin] = useState<any>(null);
-
-  // Estados para os campos editáveis
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [cargo, setCargo] = useState("");
+  const [cargo, setCargo] = useState(""); 
   const [password, setPassword] = useState("");
-  // Estado para controle de usuário ativo/inativo (true = ativo)
   const [active, setActive] = useState(true);
 
   useEffect(() => {
-    const foundAdmin = dummyAdmins.find((a) => a.id === id);
-    if (foundAdmin) {
-      setAdmin(foundAdmin);
-      setName(foundAdmin.name);
-      setEmail(foundAdmin.email);
-      setCargo(foundAdmin.cargo);
-    } else {
-      // Se o administrador não for encontrado, redireciona de volta para a lista
-      router.push("/administradores");
+    const fetchAdmin = async () => {
+      try {
+        const token = Cookies.get("token");  
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/usuarios/${id}`, {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error("Erro ao buscar administrador");
+        }
+        const data = await response.json();
+        setAdmin(data);
+        setName(data.nome);
+        setEmail(data.email);
+        setCargo(data.roles);
+        setActive(data.ativo);
+      } catch (error) {
+        console.error("Erro ao buscar administrador: ", error);
+      }
+    };
+
+    if (id) {
+      fetchAdmin();
     }
   }, [id, router]);
 
@@ -58,15 +61,41 @@ export default function AdminDetailsPage() {
     return date.toLocaleDateString("pt-BR");
   }
 
-  function handleSave() {
-    // Aqui você pode implementar a lógica para salvar os dados editados
-    alert("Dados salvos com sucesso!");
-  }
+  const handleSave = async () => {
+    const updatedUser = {
+      nome: name,
+      email: email,
+      roles: cargo,
+      senha: password,  
+      ativo: active, 
+    };
 
-  function handleToggleActive() {
-    const newStatus = !active;
-    setActive(newStatus);
-  }
+    try {
+      const token = Cookies.get("token");  
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/usuarios/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify(updatedUser),
+      });
+
+      if (!response.ok) {
+        throw new Error("Erro ao atualizar usuário");
+      }
+
+      const data = await response.json();
+      alert("Usuário atualizado com sucesso!");
+      router.push("/usuarios"); 
+    } catch (error: any) {
+      alert("Erro ao atualizar usuário: " + error.message);
+    }
+  };
+
+  const handleToggleActive = () => {
+    setActive((prevState) => !prevState);
+  };
 
   return (
     <div className="p-4">
@@ -87,13 +116,6 @@ export default function AdminDetailsPage() {
           <Input id="email" value={email} onChange={(e) => setEmail(e.target.value)} />
         </div>
         <div>
-          <Label htmlFor="createdAt" className="flex items-center gap-2 text-xl mb-2">
-            <Calendar size={20} className="text-gray-600" />
-            Criado em
-          </Label>
-          <Input id="createdAt" defaultValue={formatDate(admin.createdAt)} disabled />
-        </div>
-        <div>
           <Label htmlFor="cargo" className="flex items-center gap-2 text-xl mb-2">
             <Briefcase size={20} className="text-gray-600" />
             Cargo
@@ -103,8 +125,9 @@ export default function AdminDetailsPage() {
               <SelectValue placeholder="Selecione o cargo" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Administrador">Administrador</SelectItem>
-              <SelectItem value="Atendente">Atendente</SelectItem>
+              <SelectItem value="ADMIN">Administrador</SelectItem>
+              <SelectItem value="CLIENTE">Cliente</SelectItem> 
+              <SelectItem value="ESTOQUISTA">Estoquista</SelectItem>
             </SelectContent>
           </Select>
         </div>

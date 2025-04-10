@@ -7,13 +7,23 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeClosedIcon } from "lucide-react";
-import { LoginRequest, LoginResponse } from "@/app/models/Auth";
 import { useToast } from "@/hooks/use-toast";
+
+type LoginRequest = {
+  email: string;
+  senha: string;
+};
+
+type LoginResponse = {
+  token: string;
+  email: string;
+  role: string;
+};
 
 export default function FormLogin() {
   const [formData, setFormData] = useState<LoginRequest>({
     email: "",
-    password: "",
+    senha: "",
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -42,7 +52,9 @@ export default function FormLogin() {
 
       const data: LoginResponse = await response.json();
 
-      Cookies.set("token", data.token, { expires: 7, secure: true });
+      Cookies.set("token", data.token, { expires: 7 });
+      Cookies.set("role", data.role, { expires: 7 });
+      Cookies.set("email", data.email, { expires: 7 });
 
       toast({
         title: "Login realizado!",
@@ -51,7 +63,7 @@ export default function FormLogin() {
       });
 
       setTimeout(() => {
-        window.location.href = "/admin";
+        window.location.href = "/backoffice";
       }, 1000);
     } catch (err) {
       toast({
@@ -69,7 +81,7 @@ export default function FormLogin() {
       <CardContent className="p-6 space-y-4">
         <h2 className="text-2xl font-bold text-center leading-snug">Faça seu login!</h2>
         <p className="text-gray-500 text-center">
-          Faça login para gerenciar seus usuários e ficar conectado com usuários validados e trapaceiros.
+          Acesse seu painel administrativo do sistema Biofit.
         </p>
 
         <div>
@@ -77,20 +89,20 @@ export default function FormLogin() {
           <Input
             type="email"
             name="email"
-            placeholder="Digite seu e-mail aqui..."
+            placeholder="Digite seu e-mail"
             value={formData.email}
             onChange={handleInputChange}
           />
         </div>
 
-        <div className="relative">
+        <div>
           <Label>Senha</Label>
           <div className="relative">
             <Input
               type={showPassword ? "text" : "password"}
-              name="password"
-              placeholder="Digite sua senha aqui..."
-              value={formData.password}
+              name="senha"
+              placeholder="Digite sua senha"
+              value={formData.senha}
               onChange={handleInputChange}
             />
             <button
