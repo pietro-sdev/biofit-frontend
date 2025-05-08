@@ -26,6 +26,8 @@ import { Badge } from "@/components/ui/badge";
 import { CreateProductDialog } from "@/components/layout/product-dialog";
 import { formatToBRL } from "@/utils/formatCurrency";
 import Cookies from "js-cookie";
+import { useUserStore } from "@/store/userStore";
+
 
 export default function ProdutosPage() {
   const [produtos, setProdutos] = useState<any[]>([]);
@@ -35,6 +37,8 @@ export default function ProdutosPage() {
   const [produtoToRemove, setProdutoToRemove] = useState<any>(null);
   const router = useRouter();
   const token = Cookies.get("token"); 
+  const role = useUserStore((state) => state.role);
+
 
   useEffect(() => {
     fetchProdutos();
@@ -137,7 +141,9 @@ export default function ProdutosPage() {
     <div className="p-4 w-full">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold mb-4">Gerenciamento de Produtos</h1>
+        {role === "ADMIN" && (
         <CreateProductDialog />
+      )}
       </div>
       <Input
         placeholder="Buscar por nome do produto..."
@@ -154,9 +160,15 @@ export default function ProdutosPage() {
               <TableHead>Quantidade</TableHead>
               <TableHead>Valor</TableHead>
               <TableHead>Status</TableHead>
+              {role === "ADMIN" && (
               <TableHead>Visualizar</TableHead>
+            )}
+            {role === "ADMIN" && (
               <TableHead>Alterar</TableHead>
+            )}
+            {role === "ADMIN" && (
               <TableHead>Ação</TableHead>
+            )}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -175,6 +187,7 @@ export default function ProdutosPage() {
                     {formatStatus(produto.ativo)}
                   </Badge>
                 </TableCell>
+                {role === "ADMIN" && (
                 <TableCell>
                   <Button
                     variant="outline"
@@ -187,6 +200,8 @@ export default function ProdutosPage() {
                     Visualizar
                   </Button>
                 </TableCell>
+                 )}
+                 {role === "ADMIN" && (
                 <TableCell>
                   <Button
                     variant="secondary"
@@ -199,6 +214,8 @@ export default function ProdutosPage() {
                     Alterar
                   </Button>
                 </TableCell>
+                )}
+                {role === "ADMIN" && (
                 <TableCell>
                   {produto.ativo ? (
                     <Button
@@ -224,6 +241,7 @@ export default function ProdutosPage() {
                     </Button>
                   )}
                 </TableCell>
+                 )}
               </TableRow>
             ))}
           </TableBody>

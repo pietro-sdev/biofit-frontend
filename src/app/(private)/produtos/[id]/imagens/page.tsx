@@ -23,7 +23,6 @@ export default function ImagensPage() {
   const router = useRouter();
   const [imagens, setImagens] = useState<Imagem[]>([]);
   const [isUploading, setIsUploading] = useState(false);
-
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [nome, setNome] = useState('');
   const [diretorio, setDiretorio] = useState('');
